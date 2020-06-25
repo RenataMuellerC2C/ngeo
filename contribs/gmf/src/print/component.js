@@ -42,7 +42,6 @@ import {toDegrees, toRadians, clamp} from 'ol/math.js';
 import ImageWMS from 'ol/source/ImageWMS.js';
 import MapBrowserPointerEvent from 'ol/MapBrowserPointerEvent.js';
 import 'bootstrap/js/src/dropdown.js';
-import ExternalOGC from 'gmf/datasource/ExternalOGC.js';
 
 /**
  * Fields that can come from a print v3 server and can be used in the partial
@@ -270,7 +269,6 @@ export class PrintController {
    * @param {angular.IFilterService} $filter Angular $filter service.
    * @param {PrintState} gmfPrintState GMF print state.
    * @param {import("gmf/theme/Themes.js").ThemesService} gmfThemes The gmf Themes service.
-   * @param {import("gmf/datasource/ExternalDataSourcesManager.js").ExternalDatSourcesManager} gmfExternalDataSourcesManager The ngeo Layer Helper service.
    * @ngInject
    * @ngdoc controller
    * @ngname GmfPrintController
@@ -292,8 +290,7 @@ export class PrintController {
     ngeoQueryResult,
     $filter,
     gmfPrintState,
-    gmfThemes,
-    gmfExternalDataSourcesManager
+    gmfThemes
   ) {
     /**
      * @type {PrintState}
@@ -413,12 +410,6 @@ export class PrintController {
      * @private
      */
     this.gmfThemes_ = gmfThemes;
-
-    /**
-     * @type {import("gmf/datasource/ExternalDataSourcesManager.js").ExternalDatSourcesManager}
-     * @private
-     */
-    this.gmfExternalDataSourcesManager_ = gmfExternalDataSourcesManager;
 
     this.cacheVersion_ = '0';
     if ($injector.has('cacheVersion')) {
@@ -1451,35 +1442,6 @@ export class PrintController {
         legend.classes = legend.classes.concat(classes);
       }
     });
-
-    // Get external layers
-    const wmsGroups = this.gmfExternalDataSourcesManager_.wmsGroups;
-
-    /** @type {import('ngeo/print/mapfish-print-v3').MapFishPrintLegendClass[]} */
-    const classes = [];
-
-    wmsGroups.forEach((group) => {
-      group.dataSourcesCollection.forEach((dataSource) => {
-        if (dataSource instanceof ExternalOGC && dataSource.visible) {
-          const url = this.ngeoLayerHelper_.getWMSLegendURL(
-            dataSource.legend.url,
-            dataSource.legend.name,
-            scale
-          );
-          classes.push(
-            Object.assign({
-              name: dataSource.legend.title,
-              icons: [url],
-            })
-          );
-        }
-      });
-    });
-
-    // Add classes object if it contains something.
-    if (classes.length > 0) {
-      legend.classes = legend.classes.concat(classes);
-    }
 
     return legend.classes.length > 0 ? legend : null;
   }
